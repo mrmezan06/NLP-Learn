@@ -1,17 +1,11 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Wed Jan 29 04:47:09 2020
 
-@author: Mezan
-"""
-
-import nltk  as nk
+import nltk
 import re
-# n largest dic
 import heapq
 import numpy as np
 
-p = """Thank you all so very much. Thank you to the Academy. 
+paragraph = """Thank you all so very much. Thank you to the Academy. 
                Thank you to all of you in this room. I have to congratulate 
                the other incredible nominees this year. The Revenant was 
                the product of the tireless efforts of an unbelievable cast
@@ -40,37 +34,68 @@ p = """Thank you all so very much. Thank you to the Academy.
                out by the politics of greed. I thank you all for this 
                amazing award tonight. Let us not take this planet for 
                granted. I do not take tonight for granted. Thank you so very much."""
- 
-dataset = nk.sent_tokenize(p)   
-# Clean Puntuation and Extra Space and also convert in lower case
+               
+               
+# Tokenize sentences
+dataset = nltk.sent_tokenize(paragraph)
 for i in range(len(dataset)):
     dataset[i] = dataset[i].lower()
-    dataset[i] = re.sub(r'\W', ' ', dataset[i])
-    dataset[i] = re.sub(r'\s+', ' ', dataset[i])
-    
-# histogoram
+    dataset[i] = re.sub(r'\W',' ',dataset[i])
+    dataset[i] = re.sub(r'\s+',' ',dataset[i])
+
+
+# Creating word histogram
 word2count = {}
 for data in dataset:
-    words = nk.word_tokenize(data)
+    words = nltk.word_tokenize(data)
     for word in words:
         if word not in word2count.keys():
             word2count[word] = 1
         else:
             word2count[word] += 1
+            
+# Selecting best 100 features
+freq_words = heapq.nlargest(100,word2count,key=word2count.get)
 
-# Filtering Word
-freq_words = heapq.nlargest(100, word2count,key=word2count.get)
-# Final Stage of BOW Model
+# IDF Matrix
 
-X = []
-for data in dataset:
-    vector = []
-    for word in freq_words:
-        if word in nk.word_tokenize(data):
-            vector.append(1)
-        else:
-            vector.append(0)
-    X.append(vector)
+word_idfs = {}
 
-# list of list to 2D array
-X = np.asarray(X)
+for word in freq_words:
+    doc_count = 0
+    for data in dataset:
+        if word in nltk.word_tokenize(data):
+            doc_count += 1
+            # extra plus 1 is for biasing
+    word_idfs[word] = np.log((len(dataset)/doc_count)+1)
+
+# TF Matrix
+tf_matrix = {}
+for word in freq_words:
+    doc_tf = []
+    for data in dataset:
+        frequency = 0
+        for w in nltk.word_tokenize(data):
+            if w == word:
+                frequency += 1
+        tf_word = frequency/len(nltk.word_tokenize(data))
+        doc_tf.append(tf_word)
+    tf_matrix[word] = doc_tf
+    
+#TF-IDF Calculation
+tfidf_matrix = []
+for word in tf_matrix.keys():
+    tfidf = []
+    for value in tf_matrix[word]:
+        #IDF is fixed for single word
+        score = value * word_idfs[word]
+        tfidf.append(score)
+    tfidf_matrix.append(tfidf)
+
+#Converting 2D Array 100x21
+X = np.asarray(tfidf_matrix)
+#Transpose 2D Array 21x100
+X = np.transpose(X)
+
+
+

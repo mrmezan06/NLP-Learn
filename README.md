@@ -17,3 +17,5 @@ Tools Installation Link on Conda Shell:
       * nltk complete package download --><br/>import nltk as nk<br/>
                                            nk.download()
 4. <a href="https://www.anaconda.com/distribution/#download-section">RE - Embeded on Anaconda</a>
+5. <a href="https://anaconda.org/conda-forge/scikit-learn">SkLearn Various Module</a>
+5. <a href="https://anaconda.org/conda-forge/pickle5">Pickle </a>for File Export and import to reuse it
